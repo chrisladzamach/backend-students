@@ -1,0 +1,164 @@
+-- Create the database
+CREATE DATABASE IF NOT EXISTS students_hapkido;
+USE students_hapkido;
+drop database students_hapkido;
+
+-- Table: GRADO (Belt colors)
+CREATE TABLE grades (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    color VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Table: RANGO (Categories)
+CREATE TABLE ranks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    rank_name VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- Table: STUDENT
+CREATE TABLE student (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(255) NOT NULL,
+    id_type VARCHAR(50) NOT NULL,
+    id_number VARCHAR(50) NOT NULL UNIQUE,
+    birth_date DATE NOT NULL,
+    birth_country VARCHAR(100) NOT NULL,
+    birth_state VARCHAR(100) NOT NULL,
+    birth_city VARCHAR(100) NOT NULL,
+    phone_number VARCHAR(50),
+    registration_year YEAR NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    grade_id INT,
+    rank_id INT,
+    residence_country VARCHAR(100),
+    residence_state VARCHAR(100),
+    residence_city VARCHAR(100),
+    residence_neighborhood VARCHAR(100),
+    residence_address VARCHAR(255),
+    observations TEXT,
+    FOREIGN KEY (grade_id) REFERENCES grades(id),
+    FOREIGN KEY (rank_id) REFERENCES ranks(id)
+);
+
+-- Table: GUARDIAN for underage students
+CREATE TABLE guardian (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    id_number VARCHAR(50) NOT NULL,
+    phone_number VARCHAR(50) NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE
+);
+
+-- Insert GRADO records
+INSERT INTO grades (color) VALUES 
+('Blanco'),
+('Amarillo'),
+('Naranja'),
+('Verde'),
+('Azul'),
+('Purpura'),
+('Rojo'),
+('Rojo marrón'),
+('Marrón'),
+('Marrón negro'),
+('Negro 1 Dan'),
+('Negro 2 Dan'),
+('Negro 3 Dan'),
+('Negro 4 Dan'),
+('Negro 5 Dan'),
+('Negro 6 Dan'),
+('Negro 7 Dan'),
+('Negro 8 Dan'),
+('Negro 9 Dan');
+
+-- Insert RANGO records
+INSERT INTO ranks (rank_name) VALUES
+('Principiante'),
+('Intermedio'),
+('Avanzado'),
+('Instructor'),
+('Instructor Mayor'),
+('Profesor'),
+('Maestro'),
+('Gran Maestro');
+
+-- Example student insertion
+INSERT INTO student (
+    full_name,
+    id_type,
+    id_number,
+    birth_date,
+    birth_country,
+    birth_state,
+    birth_city,
+    phone_number,
+    registration_year,
+    is_active,
+    grade_id,
+    rank_id,
+    residence_country,
+    residence_state,
+    residence_city,
+    residence_neighborhood,
+    residence_address,
+    observations
+) VALUES (
+    'Juan Pérez García',
+    'Cédula de Ciudadanía',
+    '123456789',
+    '2010-05-15',
+    'Colombia',
+    'Antioquia',
+    'Medellín',
+    '3001234567',
+    2024,
+    TRUE,
+    (SELECT id FROM grades WHERE color = 'Amarillo'),
+    (SELECT id FROM ranks WHERE rank_name = 'Principiante'),
+    'Colombia',
+    'Antioquia',
+    'Medellín',
+    'Laureles',
+    'Calle 50 #80-20',
+    'Estudiante nuevo en formación'
+);
+
+-- Example guardian insertion (because Juan is underage)
+INSERT INTO guardian (
+    student_id,
+    full_name,
+    id_number,
+    phone_number
+) VALUES (
+    (SELECT id FROM student WHERE id_number = '123456789'),
+    'María García López',
+    '987654321',
+    '3019876543'
+);
+
+-- Query to view students showing GRADO and RANGO names
+SELECT 
+    s.id,
+    s.full_name,
+    s.id_type,
+    s.id_number,
+    s.birth_date,
+    TIMESTAMPDIFF(YEAR, s.birth_date, CURDATE()) AS age,
+    s.birth_country,
+    s.birth_state,
+    s.birth_city,
+    s.phone_number,
+    s.registration_year,
+    s.is_active,
+    g.color AS grado,
+    r.rank_name AS rango,
+    s.residence_country,
+    s.residence_state,
+    s.residence_city,
+    s.residence_neighborhood,
+    s.residence_address,
+    s.observations
+FROM student s
+LEFT JOIN grades g ON s.grade_id = g.id
+LEFT JOIN ranks r ON s.rank_id = r.id;
