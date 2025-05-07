@@ -14,12 +14,12 @@ export const getAllStudents = async (req: Request, res: Response) => {
     }
 }
 
-export const getStudentById = async (req: Request, res: Response) => {
+export const getStudentById = async (req: Request, res: Response) : Promise<void> => {
     const id = parseInt(req.params.id);
     try {
         const studentData = await student.getById(id);
         if (!studentData) {
-            return res.status(404).json({ message: 'Student not found' });
+            res.status(404).json({ message: 'Student not found' });
         }
         res.status(200).json(studentData);
     } catch (error) {
